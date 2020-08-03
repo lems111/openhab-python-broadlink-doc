@@ -1,0 +1,109 @@
+var broadlink_cli_script = "/bin/python /etc/openhab2/scripts/python-broadlink/cli/broadlink_cli"
+var bedroom_minisplit = "--type 0x5f36 --host 10.0.0.42 --mac 24dfa7dee9ca"
+var broadlink_cli_send = "%1$s %2$s --send %3$s"
+
+var drymode_hex = transform("MAP", "mini_split.map", "DRY_MODE")
+var fanmode_hex = transform("MAP", "mini_split.map", "FAN_MODE")
+var heatmode_hex = transform("MAP", "mini_split.map", "HEAT_MODE")
+var on_hex = transform("MAP", "mini_split.map", "ON")
+var off_hex = transform("MAP", "mini_split.map", "OFF")
+var dry_64_hex = transform("MAP", "mini_split.map", "DRY_64")
+var dry_66_hex = transform("MAP", "mini_split.map", "DRY_66")
+var dry_68_hex = transform("MAP", "mini_split.map", "DRY_68")
+var dry_70_hex = transform("MAP", "mini_split.map", "DRY_70")
+var dry_72_hex = transform("MAP", "mini_split.map", "DRY_72")
+var dry_74_hex = transform("MAP", "mini_split.map", "DRY_74")
+var hot_64_hex = transform("MAP", "mini_split.map", "HOT_64")
+var hot_66_hex = transform("MAP", "mini_split.map", "HOT_66")
+var hot_68_hex = transform("MAP", "mini_split.map", "HOT_68")
+var hot_70_hex = transform("MAP", "mini_split.map", "HOT_70")
+var hot_72_hex = transform("MAP", "mini_split.map", "HOT_72")
+var hot_74_hex = transform("MAP", "mini_split.map", "HOT_74")
+
+val convertCelsiusToFarenheit = [ GenericItem gi |
+//    logInfo("convertCelsiusToFarenheit", "gi: {}", gi)
+    var Number currentTempCelsius = gi.state as Number
+//    logInfo("convertCelsiusToFarenheit", "gi.state: {}, currentTempCelsius: {}", gi.state, currentTempCelsius)
+    var Number currentTemp = (currentTempCelsius * 1.8) + 32
+//    logInfo("convertCelsiusToFarenheit", "gi.state: {}, currentTemp: {}", gi.state, currentTemp)
+    currentTemp
+]
+
+rule "Bedroom Mini Split Power"
+when
+   Item BR_MiniSplit_Power received command
+then
+      logInfo("BR_MiniSplit_Power", "BR_MiniSplit_Power.state: {}", BR_MiniSplit_Power.state)
+   if(BR_MiniSplit_Power.state == ON)
+      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, on_hex), 5000)
+   else if(BR_MiniSplit_Power.state == OFF)
+      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, off_hex), 5000)
+end
+
+rule "Bedroom Mini Split Mode"
+when
+   Item BR_MiniSplit_Mode received command
+then
+      logInfo("BR_MiniSplit_Mode", "BR_MiniSplit_Mode.state: {}", BR_MiniSplit_Mode.state)
+   if(BR_MiniSplit_Mode.state == 0)
+      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, drymode_hex), 5000)
+   else if(BR_MiniSplit_Mode.state == 1)
+      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, fanmode_hex), 5000)
+   else if(BR_MiniSplit_Mode.state == 2)
+      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, heatmode_hex), 5000)
+end
+
+rule "Bedroom Mini Split Temp"
+when
+   Item BR_MiniSplit_Temp received command
+then
+   logInfo("BR_MiniSplit_Temp", "BR_MiniSplit_Temp.state: {}", BR_MiniSplit_Temp.state)
+
+   if(BR_MiniSplit_Mode.state == 0){ // DRY MODE
+      if(BR_MiniSplit_Temp.state == 64)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_64_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 66)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_66_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 68)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_68_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 70)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_70_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 72)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_72_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 74)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_74_hex), 5000)
+   } else if(BR_MiniSplit_Mode.state == 2){ // HOT MODE
+      if(BR_MiniSplit_Temp.state == 64)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_64_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 66)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_66_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 68)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_68_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 70)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_70_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 72)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_72_hex), 5000)
+      else if(BR_MiniSplit_Temp.state == 74)
+         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_74_hex), 5000)
+   }
+end
+
+rule "Bedroom Temp received update"
+when
+    Item BR_BedTemperature received update
+then
+    if(BR_MiniSplit_Temp.state != NULL && BR_MiniSplit_Temp.state > 0){
+	var Number miniSplitTemp = BR_MiniSplit_Temp.state as Number
+        var Number currentTemp = convertCelsiusToFarenheit.apply(BR_BedTemperature)
+        logInfo("BR_BedTemperature", "BR_BedTemperature.state: {}, currentTemp: {}", BR_BedTemperature.state, currentTemp)
+        var maxTempAllowed = miniSplitTemp + 2
+        logInfo("BR_BedTemperature", "BR_BedTemperature.state: {}, maxTempAllowed: {}", BR_BedTemperature.state, maxTempAllowed)
+
+        if(BR_MiniSplit_Savings.state == ON){
+            if(currentTemp >= maxTempAllowed)
+                executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, drymode_hex), 5000)
+            else if(currentTemp <= miniSplitTemp)
+                executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, fanmode_hex), 5000)
+        }
+    }
+end

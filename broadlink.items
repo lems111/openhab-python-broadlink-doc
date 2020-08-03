@@ -1,0 +1,5 @@
+Number BR_MiniSplit_Mode "Bedroom Mode"
+Switch BR_MiniSplit_Power 
+Switch BR_MiniSplit_Savings
+Number BR_MiniSplit_Temp
+

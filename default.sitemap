@@ -1,0 +1,10 @@
+sitemap default label="Home sitemap" {    
+    Frame label="Mini Splits"{
+        Text label="Bedroom" icon="cinemascreen" {           
+            Switch item=BR_MiniSplit_Power label="power" icon="switch"
+            Switch item=BR_MiniSplit_Savings label="savings" icon="switch"
+            Switch item=BR_MiniSplit_Mode label="mode" icon="flow" mappings=[0="Dry", 1="Fan", 2="Heat"]
+            Switch item=BR_MiniSplit_Temp label="" icon="temperature" mappings=[64="64", 66="66", 68="68", 70="70", 72="72", 74="74"]
+        }
+    }  
+}
