@@ -18,6 +18,7 @@ Documentation for integrating python-broadlink with openhab
 5. Add AC Control in Sitemap [default.sitemap](https://github.com/lems111/openhab-python-broadlink-doc/blob/master/default.sitemap)
 
 
+
 ## Tips
 ### Python-broadlink cli tips
 1. [CLI READ ME](https://github.com/mjg59/python-broadlink/tree/master/cli)
