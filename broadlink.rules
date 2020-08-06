@@ -1,109 +1,169 @@
 var broadlink_cli_script = "/bin/python /etc/openhab2/scripts/python-broadlink/cli/broadlink_cli"
-var bedroom_minisplit = "--type 0x5f36 --host 10.0.0.42 --mac 24dfa7dee9ca"
 var broadlink_cli_send = "%1$s %2$s --send %3$s"
 
-var drymode_hex = transform("MAP", "mini_split.map", "DRY_MODE")
-var fanmode_hex = transform("MAP", "mini_split.map", "FAN_MODE")
-var heatmode_hex = transform("MAP", "mini_split.map", "HEAT_MODE")
-var on_hex = transform("MAP", "mini_split.map", "ON")
-var off_hex = transform("MAP", "mini_split.map", "OFF")
-var dry_64_hex = transform("MAP", "mini_split.map", "DRY_64")
-var dry_66_hex = transform("MAP", "mini_split.map", "DRY_66")
-var dry_68_hex = transform("MAP", "mini_split.map", "DRY_68")
-var dry_70_hex = transform("MAP", "mini_split.map", "DRY_70")
-var dry_72_hex = transform("MAP", "mini_split.map", "DRY_72")
-var dry_74_hex = transform("MAP", "mini_split.map", "DRY_74")
-var hot_64_hex = transform("MAP", "mini_split.map", "HOT_64")
-var hot_66_hex = transform("MAP", "mini_split.map", "HOT_66")
-var hot_68_hex = transform("MAP", "mini_split.map", "HOT_68")
-var hot_70_hex = transform("MAP", "mini_split.map", "HOT_70")
-var hot_72_hex = transform("MAP", "mini_split.map", "HOT_72")
-var hot_74_hex = transform("MAP", "mini_split.map", "HOT_74")
+var bedroom_minisplit = "--type 0x5f36 --host 10.0.0.42 --mac 24dfa7dee9ca"
+var living_room_minisplit = "--type 0x5f36 --host 10.0.0.59 --mac 24dfa7e016db"
+var office_minisplit = "--type 0x5f36 --host 10.0.0.66 --mac 24dfa77a973a"
 
-val convertCelsiusToFarenheit = [ GenericItem gi |
-//    logInfo("convertCelsiusToFarenheit", "gi: {}", gi)
-    var Number currentTempCelsius = gi.state as Number
-//    logInfo("convertCelsiusToFarenheit", "gi.state: {}, currentTempCelsius: {}", gi.state, currentTempCelsius)
-    var Number currentTemp = (currentTempCelsius * 1.8) + 32
-//    logInfo("convertCelsiusToFarenheit", "gi.state: {}, currentTemp: {}", gi.state, currentTemp)
-    currentTemp
+val miniSplitTemperatureChange = [ GenericItem giMiniSplitTemp, GenericItem giMiniSplitMode, String cliSend, String cliScript, String minisplit |
+   var newTemp = ""
+   if(giMiniSplitMode.state == 0){ // DRY MODE
+      if(giMiniSplitTemp.state == 64)
+         newTemp = transform("MAP", "mini_split.map", "DRY_64")
+      else if(giMiniSplitTemp.state == 66)
+         newTemp = transform("MAP", "mini_split.map", "DRY_66")
+      else if(giMiniSplitTemp.state == 68)
+         newTemp = transform("MAP", "mini_split.map", "DRY_68")
+      else if(giMiniSplitTemp.state == 70)
+         newTemp = transform("MAP", "mini_split.map", "DRY_70")
+      else if(giMiniSplitTemp.state == 72)
+         newTemp = transform("MAP", "mini_split.map", "DRY_72")
+      else if(giMiniSplitTemp.state == 74)
+         newTemp = transform("MAP", "mini_split.map", "DRY_74")
+   } else if(giMiniSplitMode.state == 2){ // HOT MODE
+      if(giMiniSplitTemp.state == 64)
+         newTemp = transform("MAP", "mini_split.map", "HOT_64")
+      else if(giMiniSplitTemp.state == 66)
+         newTemp = transform("MAP", "mini_split.map", "HOT_66")
+      else if(giMiniSplitTemp.state == 68)
+         newTemp = transform("MAP", "mini_split.map", "HOT_68")
+      else if(giMiniSplitTemp.state == 70)
+         newTemp = transform("MAP", "mini_split.map", "HOT_70")
+      else if(giMiniSplitTemp.state == 72)
+         newTemp = transform("MAP", "mini_split.map", "HOT_72")
+      else if(giMiniSplitTemp.state == 74)
+         newTemp = transform("MAP", "mini_split.map", "HOT_74")
+   }
+   executeCommandLine(String::format(cliSend, cliScript, minisplit, newTemp), 5000)
 ]
+
+val roomTemperatureChange = [ GenericItem giMiniSplitTemp, GenericItem giRoomTemp, GenericItem giSavings, GenericItem giMode, int convertCelsius |
+    if(giMiniSplitTemp.state != NULL && giMiniSplitTemp.state > 0){
+        var Number miniSplitTemp = giMiniSplitTemp.state as Number
+        var Number currentTemp = giRoomTemp.state as Number
+        var maxTempAllowed = miniSplitTemp + 1.5
+
+        logInfo("roomTemperatureChange", "giMiniSplitTemp.state: {}, maxTempAllowed: {}", giMiniSplitTemp.state, maxTempAllowed)
+
+        if(convertCelsius == 1)
+           currentTemp = (currentTemp * 1.8) + 32
+
+        logInfo("roomTemperatureChange", "giRoomTemp.state: {}, currentTemp: {}", giRoomTemp.state, currentTemp)
+
+        if(giSavings.state == ON){
+            if(currentTemp >= maxTempAllowed)
+                giMode.sendCommand(0)
+            else if(currentTemp <= miniSplitTemp)
+                giMode.sendCommand(1)
+        }
+    }
+]
+
+val miniSplitPowerChange = [ GenericItem gi, String cliSend, String cliScript, String minisplit |
+   logInfo("miniSplitPowerChange", "gi.state: {}", gi.state)
+   if(gi.state == ON){
+      var on_hex = transform("MAP", "mini_split.map", "ON")
+      executeCommandLine(String::format(cliSend, cliScript, minisplit, on_hex), 5000)
+   } else if(gi.state == OFF){
+      var off_hex = transform("MAP", "mini_split.map", "OFF")
+      executeCommandLine(String::format(cliSend, cliScript, minisplit, off_hex), 5000)
+   }
+]
+
+val miniSplitModeChange = [ GenericItem gi, String cliSend, String cliScript, String minisplit |
+   logInfo("miniSplitModeChange", "gi.state: {}", gi.state)
+   if(gi.state == 0){
+      var drymode_hex = transform("MAP", "mini_split.map", "DRY_MODE")
+      executeCommandLine(String::format(cliSend, cliScript, minisplit, drymode_hex), 5000)
+   }else if(gi.state == 1){
+      var fanmode_hex = transform("MAP", "mini_split.map", "FAN_MODE")
+      executeCommandLine(String::format(cliSend, cliScript, minisplit, fanmode_hex), 5000)
+   }else if(gi.state == 2){
+      var heatmode_hex = transform("MAP", "mini_split.map", "HEAT_MODE")
+      executeCommandLine(String::format(cliSend, cliScript, minisplit, heatmode_hex), 5000)
+   }
+]
+
+rule "Living Room Mini Split Power"
+when
+   Item LR_MiniSplit_Power received command
+then
+   miniSplitPowerChange.apply(LR_MiniSplit_Power, broadlink_cli_send, broadlink_cli_script, living_room_minisplit)
+end
+
+rule "Living Room Mini Split Mode"
+when
+   Item LR_MiniSplit_Mode received command
+then
+    miniSplitModeChange.apply(LR_MiniSplit_Mode, broadlink_cli_send, broadlink_cli_script, living_room_minisplit)
+end
 
 rule "Bedroom Mini Split Power"
 when
    Item BR_MiniSplit_Power received command
 then
-      logInfo("BR_MiniSplit_Power", "BR_MiniSplit_Power.state: {}", BR_MiniSplit_Power.state)
-   if(BR_MiniSplit_Power.state == ON)
-      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, on_hex), 5000)
-   else if(BR_MiniSplit_Power.state == OFF)
-      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, off_hex), 5000)
+   miniSplitPowerChange.apply(BR_MiniSplit_Power, broadlink_cli_send, broadlink_cli_script, bedroom_minisplit)
 end
 
 rule "Bedroom Mini Split Mode"
 when
    Item BR_MiniSplit_Mode received command
 then
-      logInfo("BR_MiniSplit_Mode", "BR_MiniSplit_Mode.state: {}", BR_MiniSplit_Mode.state)
-   if(BR_MiniSplit_Mode.state == 0)
-      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, drymode_hex), 5000)
-   else if(BR_MiniSplit_Mode.state == 1)
-      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, fanmode_hex), 5000)
-   else if(BR_MiniSplit_Mode.state == 2)
-      executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, heatmode_hex), 5000)
+   miniSplitModeChange.apply(BR_MiniSplit_Mode, broadlink_cli_send, broadlink_cli_script, bedroom_minisplit)
+end
+
+rule "Office Mini Split Power"
+when
+   Item Office_MiniSplit_Power received command
+then
+   miniSplitPowerChange.apply(Office_MiniSplit_Power, broadlink_cli_send, broadlink_cli_script, office_minisplit)
+end
+
+rule "Office Mini Split Mode"
+when
+   Item Office_MiniSplit_Mode received command
+then
+   miniSplitModeChange.apply(Office_MiniSplit_Mode, broadlink_cli_send, broadlink_cli_script, office_minisplit)
 end
 
 rule "Bedroom Mini Split Temp"
 when
    Item BR_MiniSplit_Temp received command
 then
-   logInfo("BR_MiniSplit_Temp", "BR_MiniSplit_Temp.state: {}", BR_MiniSplit_Temp.state)
+   miniSplitTemperatureChange.apply(BR_MiniSplit_Temp, BR_MiniSplit_Mode, broadlink_cli_send, broadlink_cli_script, bedroom_minisplit)
+end
 
-   if(BR_MiniSplit_Mode.state == 0){ // DRY MODE
-      if(BR_MiniSplit_Temp.state == 64)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_64_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 66)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_66_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 68)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_68_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 70)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_70_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 72)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_72_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 74)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, dry_74_hex), 5000)
-   } else if(BR_MiniSplit_Mode.state == 2){ // HOT MODE
-      if(BR_MiniSplit_Temp.state == 64)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_64_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 66)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_66_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 68)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_68_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 70)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_70_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 72)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_72_hex), 5000)
-      else if(BR_MiniSplit_Temp.state == 74)
-         executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, hot_74_hex), 5000)
-   }
+rule "Living Room Mini Split Temp"
+when
+   Item LR_MiniSplit_Temp received command
+then
+   miniSplitTemperatureChange.apply(LR_MiniSplit_Temp, LR_MiniSplit_Mode, broadlink_cli_send, broadlink_cli_script, living_room_minisplit)
+end
+
+rule "Office Mini Split Temp"
+when
+   Item Office_MiniSplit_Temp received command
+then
+   miniSplitTemperatureChange.apply(Office_MiniSplit_Temp, Office_MiniSplit_Mode, broadlink_cli_send, broadlink_cli_script, office_minisplit)
 end
 
 rule "Bedroom Temp received update"
 when
     Item BR_BedTemperature received update
 then
-    if(BR_MiniSplit_Temp.state != NULL && BR_MiniSplit_Temp.state > 0){
-	var Number miniSplitTemp = BR_MiniSplit_Temp.state as Number
-        var Number currentTemp = convertCelsiusToFarenheit.apply(BR_BedTemperature)
-        logInfo("BR_BedTemperature", "BR_BedTemperature.state: {}, currentTemp: {}", BR_BedTemperature.state, currentTemp)
-        var maxTempAllowed = miniSplitTemp + 2
-        logInfo("BR_BedTemperature", "BR_BedTemperature.state: {}, maxTempAllowed: {}", BR_BedTemperature.state, maxTempAllowed)
+    roomTemperatureChange.apply(BR_MiniSplit_Temp, BR_BedTemperature, BR_MiniSplit_Savings, BR_MiniSplit_Mode, 1)
+end
 
-        if(BR_MiniSplit_Savings.state == ON){
-            if(currentTemp >= maxTempAllowed)
-                executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, drymode_hex), 5000)
-            else if(currentTemp <= miniSplitTemp)
-                executeCommandLine(String::format(broadlink_cli_send, broadlink_cli_script, bedroom_minisplit, fanmode_hex), 5000)
-        }
-    }
+rule "Living Room Temp received update"
+when
+    Item LR_Temperature received update
+then
+    roomTemperatureChange.apply(LR_MiniSplit_Temp, LR_Temperature, LR_MiniSplit_Savings, LR_MiniSplit_Mode, 0)
+end
+
+rule "Office Temp received update"
+when
+    Item Hallway_Temperature received update
+then
+    roomTemperatureChange.apply(Office_MiniSplit_Temp, Hallway_Temperature, Office_MiniSplit_Savings, Office_MiniSplit_Mode, 1)
 end

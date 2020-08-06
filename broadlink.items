@@ -3,3 +3,12 @@ Switch BR_MiniSplit_Power
 Switch BR_MiniSplit_Savings
 Number BR_MiniSplit_Temp
 
+Number LR_MiniSplit_Mode "Living Room"
+Switch LR_MiniSplit_Power
+Switch LR_MiniSplit_Savings
+Number LR_MiniSplit_Temp
+
+Number Office_MiniSplit_Mode "Office"
+Switch Office_MiniSplit_Power
+Switch Office_MiniSplit_Savings
+Number Office_MiniSplit_Temp
