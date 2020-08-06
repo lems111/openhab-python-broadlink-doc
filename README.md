@@ -5,7 +5,7 @@ Documentation for integrating python-broadlink with openhab
 ## References
 1. [python-broadlink repo](https://github.com/mjg59/python-broadlink)
 2. [openhab - how to use python-broadlink](https://community.openhab.org/t/broadlink-bestcon-rm4c-mini-mqtt-openhab-on-raspberry-pi-3b/98268)
-    
+3. [How to use string format in rules](https://community.openhab.org/t/string-formatting/5759/2?u=lems111)    
     
 ## Comments
 1. [openhab - how to use python-broadlink](https://community.openhab.org/t/broadlink-bestcon-rm4c-mini-mqtt-openhab-on-raspberry-pi-3b/98268)
