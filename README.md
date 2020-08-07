@@ -34,3 +34,14 @@ python broadlink_cli --device "0x5f36 10.0.0.42 24dfa7dee9ca" --learn
 cd python-broadlink-master\cli
 python broadlink_cli --device "0x5f36 10.0.0.42 24dfa7dee9ca" --send 2600060164380c0f0c100c2a0c100b2b0c0f0c100c100b2b0c2a0c100c0f0c100c2a0c2a0c100c100b100c100c0f0c100c0f0c100c100b100c100b100c100c2a0c100b100c100c0f0c100c0f0c100c2a0c100c0f0c100c100b2b0c2a0c2b0b2b0b2b0c2a0c2a0c2b0c0f0c100c2a0c100b100c100c0f0c100c100b100c100b2b0c2a0c100c0f0c100c0f0c100c100b2b0c0f0c2b0c0f0c100c2a0c100c0f0c100c0f0c100c100b100c100b100c100c0f0c100c100b100c100b100c100c0f0c100c100b100c100b100c100c0f0c100c0f0c100c100b100c100c0f0c100c0f0c100c100b100c100b100c100c0f0c100c100b2b0c0f0c100c0f0c2b0c2a0c2a0c2b0b100c2a0c100c000d05
 ```
+
+## Lessons learned
+1. I've had some RM mini 3s connect to my wifi right away. I had my most recent one take a couple of minutes.
+   1. patience is key.
+   2. I usually have my device list in my router on screen to see if a new IP address shows up
+      1. it's valuable to have all my connected devices named in my device list.
+      2. Any new devices would show up with no name at the top when I have the list sorted by name
+   2. after a couple of minutes, if there isn't any response
+      1. power off the broadlink device
+      2. perform a reset
+      3. try again!
